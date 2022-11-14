@@ -1,6 +1,6 @@
 package biodata
 
 type Biodata struct {
-	ID                         int
-	Name, Address, Job, Reason string
+	ID                                    int
+	Username, Email, Address, Job, Reason string
 }

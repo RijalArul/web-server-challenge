@@ -2,11 +2,13 @@ package biodata
 
 import (
 	"fmt"
+	"strings"
 )
 
 type ContractMethodBiodata interface {
-	ListNama() map[string][]string
-	FilterNama(name string) string
+	ListEmail() map[string][]string
+	FilterEmail(name string) string
+	GenerateUsername() string
 	GenerateID() int
 	GenerateAddress() string
 	GenerateJob() string
@@ -14,34 +16,34 @@ type ContractMethodBiodata interface {
 }
 
 /* LIST NAMES */
-func ContractListNama(contract ContractMethodBiodata) {
-	fmt.Println("List Nama ", contract.ListNama())
+func ContractListEmail(contract ContractMethodBiodata) {
+	fmt.Println("List Email ", contract.ListEmail())
 }
 
-func (b *Biodata) ListNama() map[string][]string {
-	arrNama := []string{"Claude", "Leo", "Julian"}
-	dataNama := map[string][]string{
-		"Names": arrNama,
+func (b *Biodata) ListEmail() map[string][]string {
+	arrEmail := []string{"Claude@gmail.com", "Leo@gmail.com", "Julian@gmail.com"}
+	dataEmail := map[string][]string{
+		"Emails": arrEmail,
 	}
-	return dataNama
+	return dataEmail
 }
 
 /* FILTER NAMES */
-func ContractFilterNama(contract ContractMethodBiodata, nama string) {
-	fmt.Println("FIlter Nama", contract.FilterNama(nama))
+func ContractFilterEmail(contract ContractMethodBiodata, nama string) {
+	fmt.Println("FIlter Email", contract.FilterEmail(nama))
 }
 
-func (b *Biodata) FilterNama(name string) string {
-	names := b.ListNama()
-	for i := 0; i < len(names); i++ {
-		for j := 0; j < len(names["Names"]); j++ {
-			if names["Names"][j] == name {
-				b.Name = names["Names"][j]
+func (b *Biodata) FilterEmail(name string) string {
+	emails := b.ListEmail()
+	for i := 0; i < len(emails); i++ {
+		for j := 0; j < len(emails["Emails"]); j++ {
+			if emails["Emails"][j] == name {
+				b.Email = emails["Emails"][j]
 			}
 		}
 
 	}
-	return b.Name
+	return b.Email
 }
 
 /* GENERATE ID */
@@ -51,16 +53,28 @@ func ContractGenerateID(contract ContractMethodBiodata) {
 }
 
 func (b *Biodata) GenerateID() int {
-	names := b.ListNama()
-	for i := 0; i < len(names); i++ {
-		for j := 0; j < len(names["Names"]); j++ {
-			if names["Names"][j] == b.Name {
+	emails := b.ListEmail()
+	for i := 0; i < len(emails); i++ {
+		for j := 0; j < len(emails["Emails"]); j++ {
+			if emails["Emails"][j] == b.Email {
 				b.ID = j
 			}
 		}
 	}
 
 	return b.ID
+}
+
+/* GENERATE USERNAME */
+
+func ContractGenerateUsername(contract ContractMethodBiodata) {
+	fmt.Println("Generate Username", contract.GenerateUsername())
+}
+
+func (b *Biodata) GenerateUsername() string {
+	newUsername := strings.Split(b.Email, "@")
+	b.Username = newUsername[0]
+	return b.Username
 }
 
 /* GENERATE ADDRESS */
@@ -91,6 +105,6 @@ func ContractGenerateReason(contract ContractMethodBiodata) {
 	fmt.Println("Generate Reason ", contract.GenerateReason())
 }
 func (b *Biodata) GenerateReason() string {
-	b.Reason = "Alasan " + b.Name
+	b.Reason = "Alasan " + b.Username
 	return b.Reason
 }

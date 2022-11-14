@@ -19,20 +19,21 @@ func main() {
 	bio := biodata.Biodata{}
 	mux := http.NewServeMux()
 	t := template.Must(template.ParseGlob("./templates/*.gohtml"))
-	listNama := bio.ListNama()
+	listEmail := bio.ListEmail()
+
 	LoginPage := func(w http.ResponseWriter, r *http.Request) {
 		_, errC := r.Cookie("Name")
 		err := r.ParseForm()
 
-		username := r.PostFormValue("username")
+		email := r.PostFormValue("email")
 		password := r.PostFormValue("password")
 
 		if err != nil {
 			panic(err)
 		}
 
-		if username == bio.FilterNama(username) && password == "Abc123" || errC == nil {
-			setCookie(w, r, bio.FilterNama(username))
+		if email == bio.FilterEmail(email) && password == "Abc123" || errC == nil {
+			setCookie(w, r, bio.FilterEmail(email))
 			http.Redirect(w, r, "http://localhost:8080/biodata", http.StatusSeeOther)
 		}
 
@@ -46,9 +47,10 @@ func main() {
 		if err != nil {
 			http.Redirect(w, r, "http://localhost:8080/login", http.StatusSeeOther)
 		} else {
-			if len(listNama) > 0 && cookie.Value != "" {
-				if bio.FilterNama(cookie.Value) != "" {
-					bio.FilterNama(cookie.Value)
+			if len(listEmail) > 0 && cookie.Value != "" {
+				if bio.FilterEmail(cookie.Value) != "" {
+					bio.FilterEmail(cookie.Value)
+					bio.GenerateUsername()
 					bio.GenerateID()
 					bio.GenerateAddress()
 					bio.GenerateJob()
