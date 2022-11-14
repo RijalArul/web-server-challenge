@@ -2,77 +2,88 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
+	"text/template"
+	"web-server-2-go/biodata"
 )
 
+func setCookie(w http.ResponseWriter, r *http.Request, name string) {
+	cookie := new(http.Cookie)
+	cookie.Name = "Name"
+	cookie.Value = name
+	cookie.Path = "/"
+	http.SetCookie(w, cookie)
+}
+
 func main() {
-	dataEmail := []string{"Rijalarul7599@gmail.com"}
-	data := map[string]string{}
+	bio := biodata.Biodata{}
+	mux := http.NewServeMux()
+	t := template.Must(template.ParseGlob("./templates/*.gohtml"))
+	listNama := bio.ListNama()
+	LoginPage := func(w http.ResponseWriter, r *http.Request) {
+		_, errC := r.Cookie("Name")
+		err := r.ParseForm()
 
-	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		username := r.PostFormValue("username")
+		password := r.PostFormValue("password")
 
-		if r.Method == "POST" {
-			usernameForm := r.FormValue("username")
-			password := r.FormValue("password")
-			for i := 0; i < len(dataEmail); i++ {
-				if usernameForm == dataEmail[i] && len(password) > 0 {
-					username := dataEmail[i]
-					data = map[string]string{
-						"username": username,
-						"alasan":   "Alasan " + username,
-					}
+		if err != nil {
+			panic(err)
+		}
 
-					http.Redirect(w, r, "http://localhost:8080/", http.StatusSeeOther)
+		if username == bio.FilterNama(username) && password == "Abc123" || errC == nil {
+			setCookie(w, r, bio.FilterNama(username))
+			http.Redirect(w, r, "http://localhost:8080/biodata", http.StatusSeeOther)
+		}
+
+		t.ExecuteTemplate(w, "login-page.gohtml", nil)
+
+	}
+
+	BioPage := func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("Name")
+
+		if err != nil {
+			http.Redirect(w, r, "http://localhost:8080/login", http.StatusSeeOther)
+		} else {
+			if len(listNama) > 0 && cookie.Value != "" {
+				if bio.FilterNama(cookie.Value) != "" {
+					bio.FilterNama(cookie.Value)
+					bio.GenerateID()
+					bio.GenerateAddress()
+					bio.GenerateJob()
+					bio.GenerateReason()
 				}
 			}
 		}
+		t.ExecuteTemplate(w, "bio-page.gohtml", bio)
 
-		var t, err = template.ParseFiles("login.html")
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
+	}
 
-		t.Execute(w, data)
-	})
+	LogOut := func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("Name")
+		cookie.MaxAge = -1
+		fmt.Println(cookie, err)
+		http.SetCookie(w, cookie)
+		http.Redirect(w, r, "/login", http.StatusFound)
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	}
 
-		if len(data) == 0 {
-			http.Redirect(w, r, "http://localhost:8080/login", http.StatusSeeOther)
-		} else {
-			var t, err = template.ParseFiles("template.html")
-			if err != nil {
-				fmt.Println(err.Error())
-				return
-			}
+	mux.HandleFunc("/login", LoginPage)
+	mux.HandleFunc("/biodata", BioPage)
+	mux.HandleFunc("/logout", LogOut)
 
-			t.Execute(w, data)
-		}
+	server := http.Server{
+		Addr:    "localhost:8080",
+		Handler: mux,
+	}
 
-	})
+	err := server.ListenAndServe()
 
-	http.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
-
-		if r.Method == "POST" {
-			data = map[string]string{}
-			http.Redirect(w, r, "http://localhost:8080/login", http.StatusSeeOther)
-
-			var t, err = template.ParseFiles("template.html")
-			if err != nil {
-				fmt.Println(err.Error())
-				return
-			}
-
-			fmt.Println(data)
-
-			t.Execute(w, data)
-		}
-
-	})
+	if err != nil {
+		panic(err)
+	}
 
 	fmt.Println("starting web server at http://localhost:8080/")
-	http.ListenAndServe(":8080", nil)
 
 }
